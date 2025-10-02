@@ -7,13 +7,27 @@ workflow{
 
     if (params.step == 1) {
         channel.fromPath('samplesheet.csv')
-            // ...
+        .splitCsv(header:true)
+        .view() 
     }
 
     // Task 2 - Read in the samplesheet and create a meta-map with all metadata and another list with the filenames ([[metadata_1 : metadata_1, ...], [fastq_1, fastq_2]]).
     //          Set the output to a new channel "in_ch" and view the channel. YOU WILL NEED TO COPY AND PASTE THIS CODE INTO SOME OF THE FOLLOWING TASKS (sorry for that).
 
     if (params.step == 2) {
+        in_ch = channel.fromPath('samplesheet.csv')
+                .splitCsv(header:true)
+                .map { row ->
+                    def meta = [
+                        sample: row.sample,
+                        condidtion: row.condition]
+
+                    def files = [ row.fastq_1, row.fastq_2 ]
+
+                    return [ meta, files ]
+        }
+
+    in_ch.view()
         
     }
 
