@@ -18,8 +18,12 @@ process SAYHELLO_PYTHON {
     //alternative way:
     //#!usr/bin/env python      
     //print("Hello World!")
+
+    //python3 -c "print('Hello World!')"
+
     """
-    python3 -c "print('Hello World!')"
+    #!/usr/bin/env python 
+    print("Hello World!")
     """
 }
 
@@ -221,7 +225,6 @@ workflow {
             | WRITETOFILE
             // continue here
 
-        //out_ch = WRITETOFILE(in_ch)
     }
 
 }
