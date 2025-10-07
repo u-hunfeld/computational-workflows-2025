@@ -1,42 +1,43 @@
 #!/usr/bin/env nextflow
 
 process SPLITLETTERS {
+    publishDir "results", mode: 'copy'
     
     input:
     tuple val(block_size), val(input_str), val(out_name)
 
     output:
-    path "*.txt"
+    path "chunks/*.txt"
 
     script:
-    // split string into chunks and write each to a file
     """
-    #!/usr/bin/env python
+    mkdir -p chunks
+    
+    python3 -c '
+    import os
     s="${input_str}"
     n=${block_size}
     prefix="${out_name}"
-    count = 0
+    os.makedirs("chunks", exist_ok=True)
     for i in range(0, len(s), n):
-        chunk_file = f"{prefix}_{i//n+1}_{count}.txt"
-        with open(chunk_file, "w") as f:
+        idx = i // n + 1
+        with open(os.path.join("chunks", f"{prefix}_{idx}.txt"), "w") as f:
             f.write(s[i:i+n])
-        count = count+1
-
+    '
     """ 
 } 
 
 process CONVERTTOUPPER {
-    publishDir "results/chunk_files", mode: 'copy'
 
     input:
     path chunk_file
 
     output:
-    path "*.txt"
+    stdout
 
     script:
     """
-    awk '{ print toupper(\$0) }' $chunk_file > upper_${chunk_file}
+    cat ${chunk_file} | tr '[:lower:]' '[:upper:]'
     """
 } 
 
@@ -57,12 +58,9 @@ workflow {
     // split the input string into chunks
         | SPLITLETTERS
     // lets remove the metamap to make it easier for us, as we won't need it anymore
-
+        SPLITLETTERS.out.flatten()
     // convert the chunks to uppercase and save the files to the results directory
         | CONVERTTOUPPER
-
-
-
-
+        | view { it }
 
 }
